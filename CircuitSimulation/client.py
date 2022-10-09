@@ -1,4 +1,5 @@
 import json
+import sys
 
 def reserve_relevant_links():
     global event_successful
@@ -28,7 +29,7 @@ def release_relevant_links():
                 break
     demand["switches"].remove(demand["switches"][0])
 
-with open("e:\ELTE\V. Felev\Telekommunikacios halozatok\Beadandok\TelCom-Projects\CircuitSimulation\cs1.json", "r") as read_file:
+with open(sys.argv[1], "r") as read_file:
     data = json.load(read_file)
     
     endpoints = data["end-points"]
@@ -74,5 +75,5 @@ for i in range(0, simulation["duration"] + 1):
             release_relevant_links()
 
             print(str(event_number) + ". " + event_name + ": " + event_endpoints + " st:" + str(event_start_time))
-            
+
             number = number + 1
