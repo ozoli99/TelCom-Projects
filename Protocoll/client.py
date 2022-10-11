@@ -19,24 +19,24 @@ with open(file2, 'rb') as file:
     print(packer.unpack(data))
 
 # file3
-packer = struct.Struct('f c b')
+packer = struct.Struct('f c ?')
 with open(file3, 'rb') as file:
     data = file.read(packer.size)
     print(packer.unpack(data))
 
 # file4
-packer = struct.Struct('9s b i')
+packer = struct.Struct('9s ? i')
 with open(file4, 'rb') as file:
     data = file.read(packer.size)
     print(packer.unpack(data))
 
 # "elso"(15), 73, True
-packer = struct.Struct('15s i b')
+packer = struct.Struct('15s i ?')
 values = ('elso', 73, True)
 print(packer.pack(*values))
 
 # 76.5, False, 'X'
-packer = struct.Struct('f b c')
+packer = struct.Struct('f ? c')
 values = (76.5, False, 'X')
 print(packer.pack(*values))
 
