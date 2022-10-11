@@ -32,20 +32,20 @@ with open(file4, 'rb') as file:
 
 # "elso"(15), 73, True
 packer = struct.Struct('15s i ?')
-values = ('elso', 73, True)
+values = (b'elso', 73, True)
 print(packer.pack(*values))
 
 # 76.5, False, 'X'
 packer = struct.Struct('f ? c')
-values = (76.5, False, 'X')
+values = (76.5, False, b'X')
 print(packer.pack(*values))
 
 # 64, "masodik"(13), 83.9
 packer = struct.Struct('i 13s f')
-values = (64, 'masodik', 83.9)
+values = (64, b'masodik', 83.9)
 print(packer.pack(*values))
 
 # 'Z', 95, "harmadik"(16)
 packer = struct.Struct('c i 16s')
-values = ('Z', 95, 'harmadik')
+values = (b'Z', 95, b'harmadik')
 print(packer.pack(*values))
