@@ -7,7 +7,7 @@ server_addr = ('', 10000)
 unpacker = struct.Struct('c I')
 
 correct_num = random.randint(1, 100)
-round_counter = 1
+answer = ''
 
 with socket(AF_INET, SOCK_STREAM) as server:
     server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
@@ -33,9 +33,8 @@ with socket(AF_INET, SOCK_STREAM) as server:
                     s.close()
                 else:
                     unp_data = unpacker.unpack(data)
-                    answer = ''
 
-                    if round_counter == 20:
+                    if answer == 'Y':
                         answer = 'V'
                     else:
                         if unp_data[0].decode() == '=':
@@ -44,15 +43,14 @@ with socket(AF_INET, SOCK_STREAM) as server:
                             else:
                                 answer = 'K'
                         elif unp_data[0].decode() == '>':
-                            if int(unp_data[1]) > correct_num:
+                            if correct_num > int(unp_data[1]):
                                 answer = 'I'
                             else:
                                 answer = 'N'
                         elif unp_data[0].decode() == '<':
-                            if int(unp_data[1]) < correct_num:
+                            if correct_num < int(unp_data[1]):
                                 answer = 'I'
                             else:
                                 answer = 'N'
-                    round_counter = round_counter + 1
 
                     s.sendall(str(answer).encode())
