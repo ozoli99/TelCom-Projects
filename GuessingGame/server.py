@@ -1,14 +1,31 @@
-from socket import socket, AF_INET, SOCK_STREAM
+from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
+import select
 
 server_addr = ('', 10000)
 
 with socket(AF_INET, SOCK_STREAM) as server:
+    server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     server.bind(server_addr)
     server.listen()
-    client_conn, client_addr = server.accept()
-    with client_conn:
-        while True:
-            data = client_conn.recv(1024)
-            if not data:
-                break
-            client_conn.sendall(data)
+
+    sockets = [server]
+
+    while True:
+        readables, writables, exceptionals = select.select(sockets, sockets, sockets, 1)
+
+        if not (readables or writables or exceptionals):
+            continue
+
+        for s in readables:
+            if s is server: # new client connect
+                client_conn, client_addr = s.accept()
+                client_conn.setblocking(0)
+
+                sockets.append(client_conn)
+            else:           # handle client
+                data = s.recv(1024)
+                if not data:
+                    sockets.remove(s)
+                    if s in writables:
+                        writables.remove(s)
+                    s.close()
