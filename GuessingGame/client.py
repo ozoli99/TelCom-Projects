@@ -24,16 +24,31 @@ with socket(AF_INET, SOCK_STREAM) as client:
     while True:
         data = client.recv(1).decode()
         if data == 'V':
-            print('Client exits')
+            print('Someone else won\nClient exits')
+            client.close()
+            exit(0)
+        elif data == 'Y':
+            print('Client won')
+            client.close()
+            exit(0)
+        elif data == 'K':
+            print('Client lose')
+            client.close()
             exit(0)
         else:
             if data == 'I':
                 if op == '<':
                     num = random.randint(1, num)
+                    op = operators[num % len(operators)]
                 elif op == '>':
                     num = random.randint(num, 100)
+                    op = operators[num % len(operators)]
             elif data == 'N':
                 if op == '<':
                     num = random.randint(num, 100)
+                    op = operators[num % len(operators)]
                 elif op == '>':
                     num = random.randint(1, num)
+                    op = operators[num % len(operators)]
+            packed_data = packer.pack((op.encode(), int(num)))
+            client.sendall(packed_data)
