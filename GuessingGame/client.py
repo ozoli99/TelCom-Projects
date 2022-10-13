@@ -6,18 +6,18 @@ server_addr = ('localhost', 10000)
 packer = struct.Struct('c I')
 
 operators = ['<', '>', '=']
-num = 0
-op = ''
+last_num = last_n_num = last_i_num = 0
+last_op = last_n_op = last_i_op = ''
 
 with socket(AF_INET, SOCK_STREAM) as client:
     client.connect(server_addr)
 
-    start_num = random.randint(1, 100)
-    start_op = operators[start_num % (len(operators) - 1)]
-    num = start_num
-    op = start_op
+    lowest_num = 1
+    highest_num = 100
+    mid = round(lowest_num + (highest_num - lowest_num) // 2)
+    sent_op = operators[mid % (len(operators) - 1)]
 
-    packed_data = packer.pack(start_op.encode(), int(start_num))
+    packed_data = packer.pack(sent_op.encode(), int(mid))
     print('Client make starting guess')
     client.sendall(packed_data)
 
@@ -37,35 +37,23 @@ with socket(AF_INET, SOCK_STREAM) as client:
             exit(0)
         else:
             if data == 'I':
-                if op == '<':
-                    guess = random.randint(1, num)
-                    if num == guess:
-                        op = '='
-                    else:
-                        op = operators[num % (len(operators) - 1)]
-                    num = guess
-                elif op == '>':
-                    guess = random.randint(num, 100)
-                    if num == guess:
-                        op = '='
-                    else:
-                        op = operators[num % (len(operators) - 1)]
-                    num = guess
-            elif data == 'N':
-                if op == '<':
-                    guess = random.randint(num, 100)
-                    if num == guess:
-                        op = '='
-                    else:
-                        op = operators[num % (len(operators) - 1)]
-                    num = guess
-                elif op == '>':
-                    guess = random.randint(1, num)
-                    if num == guess:
-                        op = '='
-                    else:
-                        op = operators[num % (len(operators) - 1)]
-                    num = guess
+                if sent_op == '<':
+                    highest_num = mid - 1
+                elif sent_op == '>':
+                    lowest_num = mid + 1
+            if data == 'N':
+                if sent_op == '<':
+                    lowest_num = mid + 1
+                elif sent_op == '>':
+                    highest_num = mid - 1
+            
+            mid = round(lowest_num + (highest_num - lowest_num) // 2)
+            
+            if lowest_num == highest_num:
+                sent_op = '='
+            else:
+                sent_op = operators[mid % (len(operators) - 1)]
+            
             print('Client make another guess')
-            packed_data = packer.pack(op.encode(), int(num))
+            packed_data = packer.pack(sent_op.encode(), int(mid))
             client.sendall(packed_data)

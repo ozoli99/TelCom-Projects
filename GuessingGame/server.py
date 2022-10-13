@@ -9,6 +9,8 @@ unpacker = struct.Struct('c I')
 correct_num = random.randint(1, 100)
 answer = ''
 
+print('Correct number:', correct_num)
+
 with socket(AF_INET, SOCK_STREAM) as server:
     server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     server.bind(server_addr)
