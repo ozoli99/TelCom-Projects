@@ -13,12 +13,12 @@ with socket(AF_INET, SOCK_STREAM) as client:
     client.connect(server_addr)
 
     start_num = random.randint(1, 100)
-    start_op = operators[start_num % len(operators)]
+    start_op = operators[start_num % (len(operators) - 1)]
     num = start_num
     op = start_op
 
-    packed_data = packer.pack((start_op.encode(), int(start_num)))
-
+    packed_data = packer.pack(start_op.encode(), int(start_num))
+    print('Client make starting guess')
     client.sendall(packed_data)
 
     while True:
@@ -38,17 +38,34 @@ with socket(AF_INET, SOCK_STREAM) as client:
         else:
             if data == 'I':
                 if op == '<':
-                    num = random.randint(1, num)
-                    op = operators[num % len(operators)]
+                    guess = random.randint(1, num)
+                    if num == guess:
+                        op = '='
+                    else:
+                        op = operators[num % (len(operators) - 1)]
+                    num = guess
                 elif op == '>':
-                    num = random.randint(num, 100)
-                    op = operators[num % len(operators)]
+                    guess = random.randint(num, 100)
+                    if num == guess:
+                        op = '='
+                    else:
+                        op = operators[num % (len(operators) - 1)]
+                    num = guess
             elif data == 'N':
                 if op == '<':
-                    num = random.randint(num, 100)
-                    op = operators[num % len(operators)]
+                    guess = random.randint(num, 100)
+                    if num == guess:
+                        op = '='
+                    else:
+                        op = operators[num % (len(operators) - 1)]
+                    num = guess
                 elif op == '>':
-                    num = random.randint(1, num)
-                    op = operators[num % len(operators)]
-            packed_data = packer.pack((op.encode(), int(num)))
+                    guess = random.randint(1, num)
+                    if num == guess:
+                        op = '='
+                    else:
+                        op = operators[num % (len(operators) - 1)]
+                    num = guess
+            print('Client make another guess')
+            packed_data = packer.pack(op.encode(), int(num))
             client.sendall(packed_data)

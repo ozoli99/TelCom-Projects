@@ -25,15 +25,18 @@ with socket(AF_INET, SOCK_STREAM) as server:
         for s in readables:
             if s is server: # new client connect
                 client_conn, client_addr = s.accept()
+                print('Connected:', client_addr)
                 sockets.append(client_conn)
             else:           # handle client
                 data = s.recv(unpacker.size)
                 if not data:
                     sockets.remove(s)
                     s.close()
+                    print('Exited')
                 else:
+                    print('Received:', data)
                     unp_data = unpacker.unpack(data)
-
+                    print('Unpack:', unp_data)
                     if answer == 'Y':
                         answer = 'V'
                     else:
@@ -52,5 +55,5 @@ with socket(AF_INET, SOCK_STREAM) as server:
                                 answer = 'I'
                             else:
                                 answer = 'N'
-
+                    print('Evaluated and sent back', answer)
                     s.sendall(str(answer).encode())
