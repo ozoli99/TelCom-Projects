@@ -23,26 +23,27 @@ with socket(AF_INET, SOCK_STREAM) as client:
     client.sendall(packed_data)
 
     while True:
-        data = client.recv(1).decode()
-        if data == 'V':
+        data = client.recv(packer.size)
+        unp_data = packer.unpack(data)
+        if unp_data[0].decode() == 'V':
             print('Someone else won\nClient exits')
             client.close()
             exit(0)
-        elif data == 'Y':
+        elif unp_data[0].decode() == 'Y':
             print('Client won')
             client.close()
             exit(0)
-        elif data == 'K':
+        elif unp_data[0].decode() == 'K':
             print('Client lose')
             client.close()
             exit(0)
         else:
-            if data == 'I':
+            if unp_data[0].decode() == 'I':
                 if sent_op == '<':
                     highest_num = mid - 1
                 elif sent_op == '>':
                     lowest_num = mid + 1
-            if data == 'N':
+            if unp_data[0].decode() == 'N':
                 if sent_op == '<':
                     lowest_num = mid + 1
                 elif sent_op == '>':

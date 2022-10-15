@@ -11,7 +11,7 @@ class GuessingGameTCPSelectServer:
         self.inputs = [self.server]
         # Wait for at least one of the sockets to be ready for processing
         self.timeout = timeout
-        self.unpacker = struct.Struct('c I')
+        self.packer = struct.Struct('c I')
         self.answer = ''
         self.correct_num = random.randint(1, 100)
 
@@ -32,15 +32,15 @@ class GuessingGameTCPSelectServer:
     def handleNewConnection(self, sock):
         # A "readable" server socket is ready to accept a connection
         connection, client_address = sock.accept()
-        connection.setblocking(0)   # or connection.settimeout(1.0)
+        #connection.setblocking(0)   # or connection.settimeout(1.0)
         self.inputs.append(connection)
-        print('Connected:', client_address)
+        print('Connected: %s:%d' % client_address)
 
     def handleDataFromClient(self, sock):
-        data = sock.recv(self.unpacker.size)
+        data = sock.recv(self.packer.size)
         if data:
             print('Received:', data)
-            unp_data = self.unpacker.unpack(data)
+            unp_data = self.packer.unpack(data)
             print('Unpack:', unp_data)
 
             if unp_data[0].decode() == '=':
@@ -58,8 +58,9 @@ class GuessingGameTCPSelectServer:
                     self.answer = 'I'
                 else:
                     self.answer = 'N'
-            print('Evaluated and sent back', self.answer)
-            sock.sendall(str(self.answer).encode())
+            data = self.packer.pack(str(self.answer).encode(), 0)
+            sock.sendall(data)
+            print('Evaluated and sent back: %s' % self.answer)
         else:
             # Interpret empty result as closed connection
             # Stop listening for input on the connection
@@ -91,7 +92,7 @@ class GuessingGameTCPSelectServer:
                 self.handleInputs(readable)
                 self.handleExceptionalCondition(exceptional)
             except KeyboardInterrupt:
-                print("The server stops")
+                print("Server closing")
                 for c in self.inputs:
                     c.close()
                 self.inputs = []
