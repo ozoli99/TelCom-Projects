@@ -4,13 +4,16 @@ import struct
 import random
 import sys
 
-class SimpleTCPSelectServer:
+class GuessingGameTCPSelectServer:
     def __init__(self, addr='localhost', port=10001, timeout=1):
         self.server = self.setupServer(addr, port)
         # Sockets from which we expect to read
         self.inputs = [self.server]
         # Wait for at least one of the sockets to be ready for processing
         self.timeout = timeout
+        self.unpacker = struct.Struct('c I')
+        self.answer = ''
+        self.correct_num = random.randint(1, 100)
 
     def setupServer(self, addr, port):
         # Create a TCP/IP socket
@@ -31,16 +34,40 @@ class SimpleTCPSelectServer:
         connection, client_address = sock.accept()
         connection.setblocking(0)   # or connection.settimeout(1.0)
         self.inputs.append(connection)
+        print('Connected:', client_address)
 
     def handleDataFromClient(self, sock):
-        data = sock.recv(1024)
+        data = sock.recv(self.unpacker.size)
         if data:
-            sock.sendall(b'OK')
+            print('Received:', data)
+            unp_data = self.unpacker.unpack(data)
+            print('Unpack:', unp_data)
+            if self.answer == 'Y':
+                self.answer = 'V'
+            else:
+                if unp_data[0].decode() == '=':
+                    if self.correct_num == int(unp_data[1]):
+                        self.answer = 'Y'
+                    else:
+                        self.answer = 'K'
+                elif unp_data[0].decode() == '>':
+                    if self.correct_num > int(unp_data[1]):
+                        self.answer = 'I'
+                    else:
+                        self.answer = 'N'
+                elif unp_data[0].decode() == '<':
+                    if self.correct_num < int(unp_data[1]):
+                        self.answer = 'I'
+                    else:
+                        self.answer = 'N'
+            print('Evaluated and sent back', self.answer)
+            sock.sendall(str(self.answer).encode())
         else:
             # Interpret empty result as closed connection
             # Stop listening for input on the connection
             self.inputs.remove(sock)
             sock.close()
+            print('Client exits')
 
     def handleInputs(self, readable):
         for sock in readable:
@@ -72,67 +99,7 @@ class SimpleTCPSelectServer:
                 self.inputs = []
 
 if len(sys.argv) == 3:
-    simpleTCPSelectServer = SimpleTCPSelectServer(sys.argv[1], int(sys.argv[2]))
+    guessingGameTCPSelectServer = GuessingGameTCPSelectServer(sys.argv[1], int(sys.argv[2]))
 else:
-    simpleTCPSelectServer = SimpleTCPSelectServer()
-simpleTCPSelectServer.handleConnections()
-
-server_addr = ('', 10000)
-unpacker = struct.Struct('c I')
-
-correct_num = random.randint(1, 100)
-answer = ''
-
-print('Correct number:', correct_num)
-
-with socket(AF_INET, SOCK_STREAM) as server:
-    server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-    server.bind(server_addr)
-    server.listen(5)
-
-    sockets = [server]
-
-    while True:
-        readables, writables, exceptionals = select.select(sockets, sockets, sockets, 1)
-
-        if not (readables or writables or exceptionals):
-            continue
-
-        for s in readables:
-            if s is server: # new client connect
-                client_conn, client_addr = s.accept()
-                client_conn.setblocking(0)
-
-                print('Connected:', client_addr)
-                
-                sockets.append(client_conn)
-            else:           # handle client
-                data = s.recv(unpacker.size)
-                if not data:
-                    sockets.remove(s)
-                    s.close()
-                    print('Exited')
-                else:
-                    print('Received:', data)
-                    unp_data = unpacker.unpack(data)
-                    print('Unpack:', unp_data)
-                    if answer == 'Y':
-                        answer = 'V'
-                    else:
-                        if unp_data[0].decode() == '=':
-                            if int(unp_data[1]) == correct_num:
-                                answer = 'Y'
-                            else:
-                                answer = 'K'
-                        elif unp_data[0].decode() == '>':
-                            if correct_num > int(unp_data[1]):
-                                answer = 'I'
-                            else:
-                                answer = 'N'
-                        elif unp_data[0].decode() == '<':
-                            if correct_num < int(unp_data[1]):
-                                answer = 'I'
-                            else:
-                                answer = 'N'
-                    print('Evaluated and sent back', answer)
-                    s.sendall(str(answer).encode())
+    guessingGameTCPSelectServer = GuessingGameTCPSelectServer()
+guessingGameTCPSelectServer.handleConnections()
