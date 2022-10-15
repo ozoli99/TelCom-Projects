@@ -42,24 +42,22 @@ class GuessingGameTCPSelectServer:
             print('Received:', data)
             unp_data = self.unpacker.unpack(data)
             print('Unpack:', unp_data)
-            if self.answer == 'Y':
-                self.answer = 'V'
-            else:
-                if unp_data[0].decode() == '=':
-                    if self.correct_num == int(unp_data[1]):
-                        self.answer = 'Y'
-                    else:
-                        self.answer = 'K'
-                elif unp_data[0].decode() == '>':
-                    if self.correct_num > int(unp_data[1]):
-                        self.answer = 'I'
-                    else:
-                        self.answer = 'N'
-                elif unp_data[0].decode() == '<':
-                    if self.correct_num < int(unp_data[1]):
-                        self.answer = 'I'
-                    else:
-                        self.answer = 'N'
+
+            if unp_data[0].decode() == '=':
+                if self.correct_num == int(unp_data[1]):
+                    self.answer = 'Y'
+                else:
+                    self.answer = 'K'
+            elif unp_data[0].decode() == '>':
+                if self.correct_num > int(unp_data[1]):
+                    self.answer = 'I'
+                else:
+                    self.answer = 'N'
+            elif unp_data[0].decode() == '<':
+                if self.correct_num < int(unp_data[1]):
+                    self.answer = 'I'
+                else:
+                    self.answer = 'N'
             print('Evaluated and sent back', self.answer)
             sock.sendall(str(self.answer).encode())
         else:
