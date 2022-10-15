@@ -14,8 +14,9 @@ with socket(AF_INET, SOCK_STREAM) as client:
 
     lowest_num = 1
     highest_num = 100
-    mid = round(lowest_num + (highest_num - lowest_num) // 2)
+    mid = lowest_num + (highest_num - lowest_num) // 2
     sent_op = operators[mid % (len(operators) - 1)]
+    range_nums = [mid]
 
     packed_data = packer.pack(sent_op.encode(), int(mid))
     print('Client make starting guess')
@@ -47,9 +48,14 @@ with socket(AF_INET, SOCK_STREAM) as client:
                 elif sent_op == '>':
                     highest_num = mid - 1
             
-            mid = round(lowest_num + (highest_num - lowest_num) // 2)
+            mid = lowest_num + (highest_num - lowest_num) // 2
+
+            if mid in range_nums:
+                sent_op = '='
+            else:
+                range_nums.append(mid)
             
-            if lowest_num == highest_num:
+            if lowest_num >= highest_num:
                 sent_op = '='
             else:
                 sent_op = operators[mid % (len(operators) - 1)]
