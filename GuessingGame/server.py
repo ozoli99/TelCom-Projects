@@ -1,11 +1,11 @@
-from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
+import socket
 import select
 import struct
 import random
 import sys
 
 class GuessingGameTCPSelectServer:
-    def __init__(self, addr='localhost', port=10001, timeout=1):
+    def __init__(self, addr='localhost', port=10000, timeout=1):
         self.server = self.setupServer(addr, port)
         # Sockets from which we expect to read
         self.inputs = [self.server]
