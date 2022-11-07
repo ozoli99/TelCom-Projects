@@ -4,8 +4,8 @@ from sys import argv
 
 def recv_file(connection, file_name):
     expected_size = b""
-    while len(expected_size) < unpacker.size:
-        more_size = conn.recv(unpacker.size - len(expected_size))
+    while len(expected_size) < 8:
+        more_size = conn.recv(8 - len(expected_size))
         if not more_size:
             raise Exception("Short file length received")
         expected_size += more_size
@@ -21,8 +21,9 @@ def recv_file(connection, file_name):
     with open(file_name, 'wb') as file:
         file.write(packet)
 
+
+
 server_addr = (argv[1], int(argv[2]))
-unpacker = struct.Struct('I I 1s')  #int, int, char[1]
 file_name = argv[6]
 
 with socket(AF_INET, SOCK_STREAM) as server:
