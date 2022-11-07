@@ -1,6 +1,6 @@
 from socket import socket,AF_INET, SOCK_STREAM, timeout, SOL_SOCKET, SO_REUSEADDR
-import struct
 from sys import argv
+import struct
 
 def recv_file(connection, file_name):
     expected_size = b""
@@ -23,23 +23,36 @@ def recv_file(connection, file_name):
 
 
 
-server_addr = (argv[1], int(argv[2]))
+netcopy_server_addr = (argv[1], int(argv[2]))
+checksum_server_addr = (argv[3], int(argv[4]))
+file_id = argv[5]
 file_name = argv[6]
 
-with socket(AF_INET, SOCK_STREAM) as server:
-	server.bind(server_addr)
-	server.listen(1)
-	server.settimeout(1.0)
-	
-	while True:
-		try:
-			client, client_addr = server.accept()
-			print("Csatlakozott: ", client_addr)
+packer = struct.Struct('2s 1s i')
+unpacker = struct.Struct('i 1s 12s')
 
-            recv_file(client, file_name)
+with socket(AF_INET, SOCK_STREAM) as netcopy_server:
+    netcopy_server.bind(netcopy_server_addr)
+    netcopy_server.listen(1)
+    netcopy_server.settimeout(1.0)
 
-            # Fajl ellenorzes Checksum szerverrel
-            # Hiba eseten a stdout-ra ki kell irni: CSUM CORRUPTED
-            # Helyes atvitel eseten az stdout-ra ki kell irni: CSUM OK
-		except timeout:
-			pass
+    while True:
+        try:
+            netcopy_client, netcopy_client_addr = netcopy_server.accept()
+            #print("Csatlakozott: ", netcopy_client_addr)
+
+            recv_file(netcopy_client, file_name)
+
+            netcopy_server.connect(checksum_server_addr)
+            netcopy_server.sendall(packer.pack('KI'.encode(), '|'.encode(), int(file_id)))
+
+            data = netcopy_server.recv(unpacker.size)
+            data = unpacker.unpack(data)
+
+            if data[0] == 0:
+                print('CSUM CORRUPTED')
+            else:
+                print('CSUM OK')
+
+        except timeout:
+            pass
